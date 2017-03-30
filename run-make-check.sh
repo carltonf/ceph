@@ -68,7 +68,8 @@ function run() {
     BUILD_MAKEOPTS=${BUILD_MAKEOPTS:-$DEFAULT_MAKEOPTS}
     CHECK_MAKEOPTS=${CHECK_MAKEOPTS:-$DEFAULT_MAKEOPTS}
 
-    $DRY_RUN ./do_cmake.sh $@ || return 1
+    # For SUSE, disable LTTNG and Babeltrace
+    $DRY_RUN ./do_cmake.sh -DWITH_LTTNG=OFF -DHAVE_BABELTRACE=OFF $@ || return 1
     $DRY_RUN cd build
     $DRY_RUN make $BUILD_MAKEOPTS tests || return 1
     $DRY_RUN ctest $CHECK_MAKEOPTS --output-on-failure || return 1

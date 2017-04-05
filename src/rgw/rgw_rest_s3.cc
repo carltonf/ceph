@@ -2832,9 +2832,9 @@ void RGWDeleteMultiObj_ObjStore_S3::end_response()
 void RGWGetObjLayout_ObjStore_S3::send_response()
 {
   if (op_ret)
-    set_req_state_err(s, op_ret);
+    set_req_state_err(s, op_ret, dialect_handler);
   dump_errno(s);
-  end_header(s, this, "application/json");
+  end_header(s, dialect_handler, this, "application/json");
 
   JSONFormatter f;
 

@@ -20,10 +20,10 @@ using namespace std;
 void RGWRestRole::send_response()
 {
   if (op_ret) {
-    set_req_state_err(s, op_ret);
+    set_req_state_err(s, op_ret, dialect_handler);
   }
   dump_errno(s);
-  end_header(s);
+  end_header(s, dialect_handler);
 }
 
 int RGWRoleRead::verify_permission()

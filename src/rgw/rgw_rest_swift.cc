@@ -1496,9 +1496,9 @@ RGWBulkUploadOp_ObjStore_SWIFT::create_stream()
 
 void RGWBulkUploadOp_ObjStore_SWIFT::send_response()
 {
-  set_req_state_err(s, op_ret);
+  set_req_state_err(s, op_ret, dialect_handler);
   dump_errno(s);
-  end_header(s, this /* RGWOp */, nullptr /* contype */,
+  end_header(s, dialect_handler, this /* RGWOp */, nullptr /* contype */,
              CHUNKED_TRANSFER_ENCODING);
   rgw_flush_formatter_and_reset(s, s->formatter);
 
@@ -1513,9 +1513,9 @@ void RGWBulkUploadOp_ObjStore_SWIFT::send_response()
     const auto last_err = { failures.back().err };
     if (boost::algorithm::contains(last_err, terminal_errors)) {
       /* The terminal errors are affecting the status of the whole upload. */
-      set_req_state_err(err, failures.back().err, s->prot_flags);
+      set_req_state_err(err, failures.back().err, s->prot_flags, dialect_handler);
     } else {
-      set_req_state_err(err, ERR_INVALID_REQUEST, s->prot_flags);
+      set_req_state_err(err, ERR_INVALID_REQUEST, s->prot_flags, dialect_handler);
     }
 
     dump_errno(err, resp_status);
@@ -1541,7 +1541,7 @@ void RGWBulkUploadOp_ObjStore_SWIFT::send_response()
     encode_json("Name", fail_desc.path, s->formatter);
 
     rgw_err err;
-    set_req_state_err(err, fail_desc.err, s->prot_flags);
+    set_req_state_err(err, fail_desc.err, s->prot_flags, dialect_handler);
     std::string status;
     dump_errno(err, status);
     encode_json("Status", status, s->formatter);

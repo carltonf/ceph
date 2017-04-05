@@ -276,7 +276,6 @@ static int modify_obj_attr(RGWRados *store, struct req_state *s, rgw_obj& obj, c
   RGWRados::Object::Read read_op(&op_target);
 
   read_op.params.attrs = &attrs;
-  read_op.params.perr = &s->err;
   
   int r = read_op.prepare();
   if (r < 0) {

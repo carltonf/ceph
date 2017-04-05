@@ -56,9 +56,9 @@ void RGWOp_ZoneGroupMap_Get::send_response() {
 void RGWOp_ZoneConfig_Get::send_response() {
   const RGWZoneParams& zone_params = store->get_zone_params();
 
-  set_req_state_err(s, http_ret);
+  set_req_state_err(s, http_ret, dialect_handler);
   dump_errno(s);
-  end_header(s);
+  end_header(s, dialect_handler);
 
   if (http_ret < 0)
     return;

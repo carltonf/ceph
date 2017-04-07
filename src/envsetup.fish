@@ -16,9 +16,16 @@ set __fish_git_prompt_showuntrackedfiles ''
 set __fish_git_prompt_showupstream ''
 # }}
 
+
 ## Environment and common utils
 set -x TOP (realpath (dirname (status -f))/../)
 set -x BUILD_ROOT $TOP/build
+# NOTE: fish doesn't like non-existent directory in $PATH
+if not test -d build
+  echo "WARNING: not a working ceph tree. Abort."
+  exit 1
+end
+
 set -x PATH $BUILD_ROOT/bin $PATH
 
 function ctop -d 'cd back to top directory'

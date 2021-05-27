@@ -21,6 +21,7 @@
 
 #ifdef WITH_RADOSGW_BEAST_OPENSSL
 #include <boost/asio/ssl.hpp>
+#include "common/split.h"
 #endif
 
 #include "rgw_dmclock_async_scheduler.h"
@@ -570,6 +571,55 @@ int AsioFrontend::init_ssl()
       return -ec.value();
     }
   }
+
+  std::optional<string> options = conf->get_val("ssl_options");
+  if (options) {
+    if (!cert) {
+      lderr(ctx()) << "no ssl_certificate configured for ssl_options" << dendl;
+      return -EINVAL;
+    }
+
+    vector<string> option_list;
+    boost::split(option_list, *options, boost::is_any_of(":"));
+    for (auto &option : ceph::split(*options, ":")) {
+      if (option == "default_workarounds") {
+        ssl_context->set_options(ssl::context::default_workarounds);
+      } else if (option == "no_compression") {
+        ssl_context->set_options(ssl::context::no_compression);
+      } else if (option == "no_sslv2") {
+        ssl_context->set_options(ssl::context::no_sslv2);
+      } else if (option == "no_sslv3") {
+        ssl_context->set_options(ssl::context::no_sslv3);
+      } else if (option == "no_tlsv1") {
+        ssl_context->set_options(ssl::context::no_tlsv1);
+      } else if (option == "no_tlsv1_1") {
+        ssl_context->set_options(ssl::context::no_tlsv1_1);
+      } else if (option == "no_tlsv1_2") {
+        ssl_context->set_options(ssl::context::no_tlsv1_2);
+      } else if (option == "single_dh_use") {
+        ssl_context->set_options(ssl::context::single_dh_use);
+      } else {
+        lderr(ctx()) << "ignoring unknown ssl option '" << option << "'" << dendl;
+      }
+    }
+  }
+
+  std::optional<string> ciphers = conf->get_val("ssl_ciphers");
+  if (ciphers) {
+    if (!cert) {
+      lderr(ctx()) << "no ssl_certificate configured for ssl_ciphers" << dendl;
+      return -EINVAL;
+    }
+
+    int r = SSL_CTX_set_cipher_list(ssl_context->native_handle(),
+                                    ciphers->c_str());
+    if (r == 0) {
+      lderr(ctx()) << "no cipher could be selected from ssl_ciphers: "
+                   << *ciphers << dendl;
+      return -EINVAL;
+    }
+  }
+
   if (have_cert) {
     ssl_context->use_certificate_chain_file(cert->second, ec);
     if (ec) {

@@ -578,7 +578,11 @@ int AsioFrontend::init_ssl()
       lderr(ctx()) << "no ssl_certificate configured for ssl_options" << dendl;
       return -EINVAL;
     }
+  } else if (cert) {
+    options = "no_sslv2:no_sslv3:no_tlsv1:no_tlsv1_1";
+  }
 
+  if (options) {
     vector<string> option_list;
     boost::split(option_list, *options, boost::is_any_of(":"));
     for (auto &option : ceph::split(*options, ":")) {

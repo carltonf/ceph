@@ -572,20 +572,21 @@ int AsioFrontend::init_ssl()
     }
   }
 
-  std::optional<string> options = conf->get_val("ssl_options");
-  if (options) {
-    if (!cert) {
+  auto options = config.find("ssl_options");
+  const bool have_options = options != config.end();
+  std::string options_str;
+  if (have_options) {
+    if (!have_cert) {
       lderr(ctx()) << "no ssl_certificate configured for ssl_options" << dendl;
       return -EINVAL;
     }
-  } else if (cert) {
-    options = "no_sslv2:no_sslv3:no_tlsv1:no_tlsv1_1";
+    options_str = options->second;
+  } else if (have_cert) {
+    options_str = "no_sslv2:no_sslv3:no_tlsv1:no_tlsv1_1";
   }
 
-  if (options) {
-    vector<string> option_list;
-    boost::split(option_list, *options, boost::is_any_of(":"));
-    for (auto &option : ceph::split(*options, ":")) {
+  if (have_options) {
+    for (auto &option : ceph::split(options_str, ":")) {
       if (option == "default_workarounds") {
         ssl_context->set_options(ssl::context::default_workarounds);
       } else if (option == "no_compression") {
@@ -608,18 +609,18 @@ int AsioFrontend::init_ssl()
     }
   }
 
-  std::optional<string> ciphers = conf->get_val("ssl_ciphers");
-  if (ciphers) {
-    if (!cert) {
+  auto ciphers = config.find("ssl_ciphers");
+  if (ciphers != config.end()) {
+    if (!have_cert) {
       lderr(ctx()) << "no ssl_certificate configured for ssl_ciphers" << dendl;
       return -EINVAL;
     }
 
     int r = SSL_CTX_set_cipher_list(ssl_context->native_handle(),
-                                    ciphers->c_str());
+                                    (ciphers->second).c_str());
     if (r == 0) {
       lderr(ctx()) << "no cipher could be selected from ssl_ciphers: "
-                   << *ciphers << dendl;
+                   << ciphers->second << dendl;
       return -EINVAL;
     }
   }
